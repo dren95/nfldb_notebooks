@@ -1,0 +1,4 @@
+ENV
+nfldb.sql*
+*~
+*.pyc
