@@ -1,4 +1,5 @@
 import nfldb
+import numpy as np
 
 def rush_pass_breakdown(db, q, team):
     """view the run/pass breakdown for drives as a function of score differential at the beginning of the drive"""
@@ -38,6 +39,8 @@ def rush_pass_breakdown(db, q, team):
             else:
                 rushing[score_diff] += rush_att
      
+	# compute percentages of run vs pass
+	 
     rushing_pct = {}
     passing_pct = {}
     for score_diff in score_diff_drives:
@@ -48,3 +51,16 @@ def rush_pass_breakdown(db, q, team):
         passing_pct[score_diff] = pass_att * 100. / total
     
     return passing, rushing, passing_pct, rushing_pct
+
+def find_graph_threshold(passing, rushing):
+	"""
+	look at the rushing and passing attempts by score_diff (as computed by
+	rush_pass_breakdown) and find the bottom 10% of total attempts by score_diff
+	value. This value can be used as a threshold value in order to smooth out
+	the graph of rushing and passing percentages.
+	"""
+	total_atts = [
+		rushing[score_diff] + passing[score_diff]
+		for score_diff in set(rushing.keys() + passing.keys())
+	]
+	return np.percentile(total_atts, 10)
