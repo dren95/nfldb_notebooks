@@ -25,6 +25,7 @@ def rush_pass_breakdown(db, q, team):
     # now look at all plays for each drive and see the run/pass breakdown
     passing = {}
     rushing = {}
+    total = {}
      
     for score_diff, drives in score_diff_drives.iteritems():
         for gsis_id, drive_id in drives:
@@ -38,29 +39,29 @@ def rush_pass_breakdown(db, q, team):
                 rushing[score_diff] = rush_att
             else:
                 rushing[score_diff] += rush_att
+            if score_diff not in total:
+                total[score_diff] = pass_att + rush_att
+            else:
+                total[score_diff] += pass_att + rush_att
      
-	# compute percentages of run vs pass
+    # compute percentages of run vs pass
 	 
     rushing_pct = {}
     passing_pct = {}
     for score_diff in score_diff_drives:
         rush_att = rushing[score_diff] if score_diff in rushing else 0
         pass_att = passing[score_diff] if score_diff in passing else 0
-        total = rush_att + pass_att
-        rushing_pct[score_diff] = rush_att * 100. / total
-        passing_pct[score_diff] = pass_att * 100. / total
+        total_att = rush_att + pass_att
+        rushing_pct[score_diff] = rush_att * 100. / total_att
+        passing_pct[score_diff] = pass_att * 100. / total_att
     
-    return passing, rushing, passing_pct, rushing_pct
+    return passing, rushing, total, passing_pct, rushing_pct
 
-def find_graph_threshold(passing, rushing):
+def find_graph_threshold(total):
 	"""
 	look at the rushing and passing attempts by score_diff (as computed by
 	rush_pass_breakdown) and find the bottom 10% of total attempts by score_diff
 	value. This value can be used as a threshold value in order to smooth out
 	the graph of rushing and passing percentages.
 	"""
-	total_atts = [
-		rushing[score_diff] + passing[score_diff]
-		for score_diff in set(rushing.keys() + passing.keys())
-	]
-	return np.percentile(total_atts, 10)
+	return np.percentile(total.values(), 10)
